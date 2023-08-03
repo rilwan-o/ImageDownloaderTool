@@ -37,7 +37,24 @@
 
         static List<string> ReadUrlsFromFile(string filePath)
         {
-            // Same as before...
+            List<string> urls = new List<string>();
+            try
+            {
+                string[] lines = File.ReadAllLines(filePath);
+                foreach (string line in lines)
+                {
+                    string trimmedLine = line.Trim();
+                    if (!string.IsNullOrWhiteSpace(trimmedLine) && Uri.IsWellFormedUriString(trimmedLine, UriKind.Absolute))
+                    {
+                        urls.Add(trimmedLine);
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine("Error reading the file: " + ex.Message);
+            }
+            return urls;
         }
 
         static async Task DownloadImagesAsync(List<string> imageUrls, string downloadFolderPath)
