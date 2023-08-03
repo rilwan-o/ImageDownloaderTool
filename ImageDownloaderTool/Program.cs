@@ -6,6 +6,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using NLog;
 using NLog.Extensions.Logging;
+using System.IO;
 using System.Text;
 
 namespace ImageDownloaderTool
@@ -29,18 +30,19 @@ namespace ImageDownloaderTool
                     return;
                 }
 
-                string textFilePath = args[0];
-                if (!File.Exists(textFilePath))
+                string textFileFolder = args[0];
+
+                if (!Directory.Exists(textFileFolder))
                 {
-                    Console.WriteLine("File not found.");
+                    Console.WriteLine("Folder not found.");
                     return;
                 }
-
+                string[] files = Directory.GetFiles(textFileFolder);
                 // Setup Dependency Injection
                 using var services = new ServiceCollection()
                     .AddHttpClient()
-                    .AddSingleton<ImageDownloader>()
-                    .AddSingleton<ImageDownloadManager>()
+                    .AddSingleton<IImageDownloader,ImageDownloader>()
+                    .AddSingleton<IImageDownloadManager,ImageDownloadManager>()
                     .AddLogging(loggingBuilder =>
                     {
                         // configure Logging with NLog
@@ -50,7 +52,7 @@ namespace ImageDownloaderTool
                     }).BuildServiceProvider();
 
                 ImageDownloader imageDownloader = services.GetRequiredService<ImageDownloader>();
-                List<string> imageUrls = imageDownloader.ReadUrlsFromFile(textFilePath);
+                List<string> imageUrls = imageDownloader.ReadUrlsFromFiles(files);
                 if (imageUrls.Count == 0)
                 {
                     Console.WriteLine("No valid image URLs found in the file.");

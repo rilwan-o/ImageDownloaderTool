@@ -3,7 +3,7 @@ using Microsoft.Extensions.Logging;
 
 namespace ImageDownloaderTool.Services
 {
-    public class ImageDownloadManager
+    public class ImageDownloadManager : IImageDownloadManager
     {
         private readonly HttpClient _httpClient;
         private readonly ILogger<ImageDownloadManager> _logger;

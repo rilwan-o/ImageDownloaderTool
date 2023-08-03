@@ -2,13 +2,34 @@
 
 namespace ImageDownloaderTool.Services
 {
-    public class ImageDownloader
+    public class ImageDownloader : IImageDownloader
     {
         private readonly ILogger<ImageDownloader> _logger;
         public ImageDownloader(ILogger<ImageDownloader> logger)
         {
             _logger = logger;
         }
+
+        public List<string> ReadUrlsFromFiles(string[] files)
+        {
+            List<string> urls = new List<string>();
+            foreach (string filePath in files)
+            {
+                try
+                {
+                    var urlList = ReadUrlsFromFile(filePath);
+                    Parallel.ForEach(urlList, url => { 
+                        urls.Add(url); 
+                    });
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogError(ex, "Error reading the file: {FilePath}", filePath);
+                }
+            }
+            return urls;
+        }
+
         public List<string> ReadUrlsFromFile(string filePath)
         {
             List<string> urls = new List<string>();

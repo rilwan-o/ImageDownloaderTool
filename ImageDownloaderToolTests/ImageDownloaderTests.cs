@@ -128,6 +128,23 @@ namespace ImageDownloaderToolTests
         }
 
         [Fact]
+        public void ReadUrlsFromFilesFolder_DuplicateUrls_ReturnsDistinctUrls()
+        {
+            // Arrange
+            var mockLogger = new Mock<ILogger<ImageDownloader>>();
+            var imageDownloader = new ImageDownloader(mockLogger.Object);
+            string folder = "TestFiles"; // Replace with the path to your test file
+            string[] files = Directory.GetFiles(folder);
+            // Act
+            List<string> urls = imageDownloader.ReadUrlsFromFiles(files);
+
+            // Assert
+            Assert.NotNull(urls);
+            Assert.NotEmpty(urls);
+            Assert.Equal(urls.Count, new HashSet<string>(urls).Count); // All URLs are distinct
+        }
+
+        [Fact]
         public void ReadUrlsFromFile_UrlsWithHttpAndHttpsSchemes_ReturnsValidUrls()
         {
             // Arrange
