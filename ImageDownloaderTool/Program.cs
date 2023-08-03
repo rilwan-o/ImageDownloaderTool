@@ -1,4 +1,7 @@
-﻿namespace ImageDownloaderTool
+﻿using ImageDownloaderTool.Exceptions;
+using ImageDownloaderTool.Services;
+
+namespace ImageDownloaderTool
 {
     class Program
     {
@@ -17,7 +20,8 @@
                 return;
             }
 
-            List<string> imageUrls = ReadUrlsFromFile(textFilePath);
+            ImageDownloader imageDownloader = new ImageDownloader();
+            List<string> imageUrls = imageDownloader.ReadUrlsFromFile(textFilePath);
             if (imageUrls.Count == 0)
             {
                 Console.WriteLine("No valid image URLs found in the file.");
@@ -29,85 +33,14 @@
             // Create the download folder if it doesn't exist
             Directory.CreateDirectory(downloadFolderPath);
 
-            await DownloadImagesAsync(imageUrls, downloadFolderPath);
-        }
-
-        static List<string> ReadUrlsFromFile(string filePath)
-        {
-            List<string> urls = new List<string>();
+            ImageDownloadManager downloadManager = new ImageDownloadManager();
             try
             {
-                string content = File.ReadAllText(filePath);
-                string[] urlArray = content.Split(new[] { ' ', '\t', '\n', '\r' }, StringSplitOptions.RemoveEmptyEntries);
-
-                foreach (string url in urlArray)
-                {
-                    if (Uri.TryCreate(url, UriKind.Absolute, out Uri uri) && (uri.Scheme == Uri.UriSchemeHttp || uri.Scheme == Uri.UriSchemeHttps))
-                    {
-                        urls.Add(uri.AbsoluteUri);
-                    }
-                    else
-                    {
-                        Console.WriteLine("Invalid URL: " + url);
-                    }
-                }
+                await downloadManager.DownloadImagesAsync(imageUrls, downloadFolderPath);
             }
-            catch (Exception ex)
+            catch (ImageDownloaderException ex)
             {
-                Console.WriteLine("Error reading the file: " + ex.Message);
-            }
-            return urls;
-        }
-
-        static async Task DownloadImagesAsync(List<string> imageUrls, string downloadFolderPath)
-        {
-            using (var httpClient = new HttpClient())
-            {
-                var downloadTasks = new List<Task>();
-
-                foreach (string imageUrl in imageUrls)
-                {
-                    downloadTasks.Add(DownloadImageAsync(httpClient, imageUrl, downloadFolderPath));
-                }
-
-                try
-                {
-                    await Task.WhenAll(downloadTasks);
-                }
-                catch (Exception ex)
-                {
-                    Console.WriteLine("Error downloading images: " + ex.Message);
-                }
-            }
-        }
-
-        static async Task DownloadImageAsync(HttpClient httpClient, string imageUrl, string downloadFolderPath)
-        {
-            try
-            {
-                string fileName = Path.GetFileName(imageUrl);
-                string filePath = Path.Combine(downloadFolderPath, fileName);
-
-                using (var response = await httpClient.GetAsync(imageUrl))
-                {
-                    if (response.IsSuccessStatusCode)
-                    {
-                        using (var contentStream = await response.Content.ReadAsStreamAsync())
-                        using (var fileStream = new FileStream(filePath, FileMode.Create))
-                        {
-                            await contentStream.CopyToAsync(fileStream);
-                        }
-                        Console.WriteLine("Downloaded: " + fileName);
-                    }
-                    else
-                    {
-                        Console.WriteLine("Failed to download: " + fileName);
-                    }
-                }
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine("Error downloading image: " + ex.Message);
+                Console.WriteLine(ex.Message);
             }
         }
     }
