@@ -3,7 +3,7 @@ using System.Text;
 
 namespace ImageDownloaderTool.Services
 {
-    class ImageDownloader
+    public class ImageDownloader
     {
         private readonly ILogger<ImageDownloader> _logger;
         public ImageDownloader(ILogger<ImageDownloader> logger)
@@ -20,6 +20,7 @@ namespace ImageDownloaderTool.Services
 
                 foreach (string url in urlArray)
                 {
+                    if(!string.IsNullOrEmpty(url)) url.Trim();
                     if (Uri.TryCreate(url, UriKind.Absolute, out Uri uri) && (uri.Scheme == Uri.UriSchemeHttp || uri.Scheme == Uri.UriSchemeHttps))
                     {
                         urls.Add(uri.AbsoluteUri);
