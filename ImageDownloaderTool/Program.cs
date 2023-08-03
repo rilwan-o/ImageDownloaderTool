@@ -1,6 +1,7 @@
 ﻿using ImageDownloaderTool.Exceptions;
 using ImageDownloaderTool.Services;
 using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Configuration.Json;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using NLog;
@@ -14,6 +15,12 @@ namespace ImageDownloaderTool
         static async Task Main(string[] args)
         {
             var logger = LogManager.GetCurrentClassLogger();
+            var builder = new ConfigurationBuilder()
+            .SetBasePath(Directory.GetCurrentDirectory())
+            .AddJsonFile("appsettings.json", optional: true, reloadOnChange: true);
+
+            IConfiguration config = builder.Build();
+
             try
             {
                 if (args.Length != 1)
@@ -39,9 +46,7 @@ namespace ImageDownloaderTool
                         // configure Logging with NLog
                         loggingBuilder.ClearProviders();
                         loggingBuilder.SetMinimumLevel(Microsoft.Extensions.Logging.LogLevel.Trace);
-                        loggingBuilder.AddNLog(new ConfigurationBuilder()
-                      .SetBasePath(Directory.GetCurrentDirectory())
-                      .Build());
+                        loggingBuilder.AddNLog(config);
                     }).BuildServiceProvider();
 
                 ImageDownloader imageDownloader = services.GetRequiredService<ImageDownloader>();
@@ -52,7 +57,8 @@ namespace ImageDownloaderTool
                     return;
                 }
 
-                string downloadFolderPath = "C:\\Temp\\downloaded_images"; // Change this to your desired folder path
+                // Get the DownloadFolderPath from appsettings.json
+                string downloadFolderPath = config.GetSection("AppSettings")["DownloadFolderPath"];// Change this to your desired folder path
 
                 // Create the download folder if it doesn't exist
                 Directory.CreateDirectory(downloadFolderPath);
