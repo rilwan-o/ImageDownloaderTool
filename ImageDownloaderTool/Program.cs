@@ -27,10 +27,7 @@
             string downloadFolderPath = "downloaded_images"; // Change this to your desired folder path
 
             // Create the download folder if it doesn't exist
-            if (!Directory.Exists(downloadFolderPath))
-            {
-                Directory.CreateDirectory(downloadFolderPath);
-            }
+            Directory.CreateDirectory(downloadFolderPath);
 
             await DownloadImagesAsync(imageUrls, downloadFolderPath);
         }
@@ -90,12 +87,12 @@
                 {
                     if (response.IsSuccessStatusCode)
                     {
-                        using (var content = await response.Content.ReadAsStreamAsync())
-                        using (var stream = new FileStream(filePath, FileMode.Create))
+                        using (var contentStream = await response.Content.ReadAsStreamAsync())
+                        using (var fileStream = new FileStream(filePath, FileMode.Create))
                         {
-                            await content.CopyToAsync(stream);
-                            Console.WriteLine("Downloaded: " + fileName);
+                            await contentStream.CopyToAsync(fileStream);
                         }
+                        Console.WriteLine("Downloaded: " + fileName);
                     }
                     else
                     {
@@ -109,6 +106,4 @@
             }
         }
     }
-
-
 }
