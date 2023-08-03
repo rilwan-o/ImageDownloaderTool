@@ -20,7 +20,7 @@
             List<string> imageUrls = ReadUrlsFromFile(textFilePath);
             if (imageUrls.Count == 0)
             {
-                Console.WriteLine("No image URLs found in the file.");
+                Console.WriteLine("No valid image URLs found in the file.");
                 return;
             }
 
@@ -37,13 +37,18 @@
             List<string> urls = new List<string>();
             try
             {
-                string[] lines = File.ReadAllLines(filePath);
-                foreach (string line in lines)
+                string content = File.ReadAllText(filePath);
+                string[] urlArray = content.Split(new[] { ' ', '\t', '\n', '\r' }, StringSplitOptions.RemoveEmptyEntries);
+
+                foreach (string url in urlArray)
                 {
-                    string trimmedLine = line.Trim();
-                    if (!string.IsNullOrWhiteSpace(trimmedLine) && Uri.IsWellFormedUriString(trimmedLine, UriKind.Absolute))
+                    if (Uri.TryCreate(url, UriKind.Absolute, out Uri uri) && (uri.Scheme == Uri.UriSchemeHttp || uri.Scheme == Uri.UriSchemeHttps))
                     {
-                        urls.Add(trimmedLine);
+                        urls.Add(uri.AbsoluteUri);
+                    }
+                    else
+                    {
+                        Console.WriteLine("Invalid URL: " + url);
                     }
                 }
             }
@@ -106,4 +111,5 @@
             }
         }
     }
+
 }
