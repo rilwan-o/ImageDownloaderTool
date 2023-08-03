@@ -1,7 +1,15 @@
-﻿namespace ImageDownloaderTool.Services
+﻿using Microsoft.Extensions.Logging;
+using System.Text;
+
+namespace ImageDownloaderTool.Services
 {
     class ImageDownloader
     {
+        private readonly ILogger<ImageDownloader> _logger;
+        public ImageDownloader(ILogger<ImageDownloader> logger)
+        {
+            _logger = logger;
+        }
         public List<string> ReadUrlsFromFile(string filePath)
         {
             List<string> urls = new List<string>();
@@ -18,13 +26,13 @@
                     }
                     else
                     {
-                        Console.WriteLine("Invalid URL: " + url);
+                        _logger.LogError("Invalid URL: {InvalidUrl}", url);
                     }
                 }
             }
             catch (Exception ex)
             {
-                Console.WriteLine("Error reading the file: " + ex.Message);
+                _logger.LogError(ex, "Error reading the file: {FilePath}", filePath);
             }
             return urls;
         }

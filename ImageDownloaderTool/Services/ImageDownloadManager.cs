@@ -1,39 +1,47 @@
 ﻿using ImageDownloaderTool.Exceptions;
+using Microsoft.Extensions.Logging;
 
 namespace ImageDownloaderTool.Services
 {
     public class ImageDownloadManager
     {
+        private readonly HttpClient _httpClient;
+        private readonly ILogger<ImageDownloadManager> _logger;
+
+        public ImageDownloadManager(HttpClient httpClient, ILogger<ImageDownloadManager> logger)
+        {
+            _logger = logger;
+            _httpClient = httpClient;
+        }
+
         public async Task DownloadImagesAsync(List<string> imageUrls, string downloadFolderPath)
         {
-            using (var httpClient = new HttpClient())
+            var downloadTasks = new List<Task>();
+
+            foreach (string imageUrl in imageUrls)
             {
-                var downloadTasks = new List<Task>();
+                downloadTasks.Add(DownloadImageAsync(imageUrl, downloadFolderPath));
+            }
 
-                foreach (string imageUrl in imageUrls)
-                {
-                    downloadTasks.Add(DownloadImageAsync(httpClient, imageUrl, downloadFolderPath));
-                }
-
-                try
-                {
-                    await Task.WhenAll(downloadTasks);
-                }
-                catch (Exception ex)
-                {
-                    throw new ImageDownloaderException("Error downloading images: " + ex.Message);
-                }
+            try
+            {
+                await Task.WhenAll(downloadTasks);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error downloading images");
+                throw new ImageDownloaderException("Error downloading images");
             }
         }
 
-        private async Task DownloadImageAsync(HttpClient httpClient, string imageUrl, string downloadFolderPath)
+        private async Task DownloadImageAsync(string imageUrl, string downloadFolderPath)
         {
             try
             {
                 string fileName = Path.GetFileName(imageUrl);
                 string filePath = Path.Combine(downloadFolderPath, fileName);
 
-                using (var response = await httpClient.GetAsync(imageUrl))
+                using (var response = await _httpClient.GetAsync(imageUrl))
                 {
                     if (response.IsSuccessStatusCode)
                     {
@@ -42,17 +50,18 @@ namespace ImageDownloaderTool.Services
                         {
                             await contentStream.CopyToAsync(fileStream);
                         }
-                        Console.WriteLine("Downloaded: " + fileName);
+                        _logger.LogInformation("Downloaded: {FileName}", fileName);
                     }
                     else
                     {
-                        Console.WriteLine("Failed to download: " + fileName);
+                        _logger.LogError("Failed to download: {FileName} and STATUS CODE : {Code}", fileName, response.StatusCode);
                     }
                 }
             }
             catch (Exception ex)
             {
-                throw new ImageDownloaderException("Error downloading image: " + ex.Message);
+                _logger.LogError(ex, "Error downloading image: {ImageUrl}", imageUrl);
+                throw new ImageDownloaderException("Error downloading image");
             }
         }
     }
