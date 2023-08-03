@@ -1,5 +1,4 @@
 ﻿using Microsoft.Extensions.Logging;
-using System.Text;
 
 namespace ImageDownloaderTool.Services
 {
@@ -20,7 +19,6 @@ namespace ImageDownloaderTool.Services
 
                 foreach (string url in urlArray)
                 {
-                    if(!string.IsNullOrEmpty(url)) url.Trim();
                     if (Uri.TryCreate(url, UriKind.Absolute, out Uri uri) && (uri.Scheme == Uri.UriSchemeHttp || uri.Scheme == Uri.UriSchemeHttps))
                     {
                         urls.Add(uri.AbsoluteUri);
@@ -38,5 +36,4 @@ namespace ImageDownloaderTool.Services
             return urls;
         }
     }
-   
 }
