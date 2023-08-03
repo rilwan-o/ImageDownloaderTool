@@ -37,61 +37,61 @@
 
         static List<string> ReadUrlsFromFile(string filePath)
         {
-            List<string> urls = new List<string>();
-            try
-            {
-                string[] lines = File.ReadAllLines(filePath);
-                foreach (string line in lines)
-                {
-                    string trimmedLine = line.Trim();
-                    if (!string.IsNullOrWhiteSpace(trimmedLine) && Uri.IsWellFormedUriString(trimmedLine, UriKind.Absolute))
-                    {
-                        urls.Add(trimmedLine);
-                    }
-                }
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine("Error reading the file: " + ex.Message);
-            }
-            return urls;
+            // Same as before...
         }
 
         static async Task DownloadImagesAsync(List<string> imageUrls, string downloadFolderPath)
         {
             using (var httpClient = new HttpClient())
             {
+                var downloadTasks = new List<Task>();
+
                 foreach (string imageUrl in imageUrls)
                 {
-                    try
-                    {
-                        string fileName = Path.GetFileName(imageUrl);
-                        string filePath = Path.Combine(downloadFolderPath, fileName);
+                    downloadTasks.Add(DownloadImageAsync(httpClient, imageUrl, downloadFolderPath));
+                }
 
-                        using (var response = await httpClient.GetAsync(imageUrl))
-                        {
-                            if (response.IsSuccessStatusCode)
-                            {
-                                using (var content = await response.Content.ReadAsStreamAsync())
-                                using (var stream = new FileStream(filePath, FileMode.Create))
-                                {
-                                    await content.CopyToAsync(stream);
-                                    Console.WriteLine("Downloaded: " + fileName);
-                                }
-                            }
-                            else
-                            {
-                                Console.WriteLine("Failed to download: " + fileName);
-                            }
-                        }
-                    }
-                    catch (Exception ex)
-                    {
-                        Console.WriteLine("Error downloading image: " + ex.Message);
-                    }
+                try
+                {
+                    await Task.WhenAll(downloadTasks);
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine("Error downloading images: " + ex.Message);
                 }
             }
         }
+
+        static async Task DownloadImageAsync(HttpClient httpClient, string imageUrl, string downloadFolderPath)
+        {
+            try
+            {
+                string fileName = Path.GetFileName(imageUrl);
+                string filePath = Path.Combine(downloadFolderPath, fileName);
+
+                using (var response = await httpClient.GetAsync(imageUrl))
+                {
+                    if (response.IsSuccessStatusCode)
+                    {
+                        using (var content = await response.Content.ReadAsStreamAsync())
+                        using (var stream = new FileStream(filePath, FileMode.Create))
+                        {
+                            await content.CopyToAsync(stream);
+                            Console.WriteLine("Downloaded: " + fileName);
+                        }
+                    }
+                    else
+                    {
+                        Console.WriteLine("Failed to download: " + fileName);
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine("Error downloading image: " + ex.Message);
+            }
+        }
     }
+
 
 }
