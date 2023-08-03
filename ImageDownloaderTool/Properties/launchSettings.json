@@ -2,7 +2,7 @@
   "profiles": {
     "ImageDownloaderTool": {
       "commandName": "Project",
-      "commandLineArgs": "C:\\Temp\\test-folder\\test.txt"
+      "commandLineArgs": "add-sample file for testing"
     }
   }
 }
